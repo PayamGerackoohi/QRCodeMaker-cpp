@@ -1,5 +1,3 @@
 set -e
-cmake --build build
-pushd build/test > /dev/null
-ctest
-popd > /dev/null
+./scripts/build.sh
+./scripts/test.sh

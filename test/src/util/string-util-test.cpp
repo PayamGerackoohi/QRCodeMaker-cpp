@@ -1,6 +1,7 @@
 #include "test-util/assertion.hpp"
 #include "test-util/test-platform.hpp"
 #include "util/string-util.hpp"
+#include <cassert>
 #include <cstring>
 #include <iostream>
 #include <vector>

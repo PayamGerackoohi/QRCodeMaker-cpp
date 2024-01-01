@@ -1,5 +1,6 @@
 #include "test-platform.hpp"
 #include <iostream>
+#include <string>
 
 using std::string;
 

@@ -1,7 +1,9 @@
 #include "content/me-card.hpp"
 #include "test-util/assertion.hpp"
 #include "test-util/test-platform.hpp"
+#include <cassert>
 #include <cstring>
+#include <memory>
 #include <string>
 
 using QrCodeUtil::MeCard;

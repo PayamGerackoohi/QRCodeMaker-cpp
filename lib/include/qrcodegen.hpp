@@ -28,6 +28,7 @@
 
 #include <array>
 #include <cstdint>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -114,14 +115,14 @@ public:
    * can be converted to UTF-8 bytes and encoded as a byte mode segment.
    */
 public:
-  static QrSegment makeBytes(const std::vector<std::uint8_t> &data);
+  static std::unique_ptr<QrSegment> makeBytes(const std::vector<std::uint8_t> &data);
 
   /*
    * Returns a segment representing the given string of decimal digits encoded
    * in numeric mode.
    */
 public:
-  static QrSegment makeNumeric(const char *digits);
+  static std::unique_ptr<QrSegment> makeNumeric(const char *digits);
 
   /*
    * Returns a segment representing the given text string encoded in
@@ -130,7 +131,7 @@ public:
    * colon.
    */
 public:
-  static QrSegment makeAlphanumeric(const char *text);
+  static std::unique_ptr<QrSegment> makeAlphanumeric(const char *text);
 
   /*
    * Returns a list of zero or more segments to represent the given text string.
@@ -138,14 +139,14 @@ public:
    * length of the bit stream.
    */
 public:
-  static std::vector<QrSegment> makeSegments(const char *text);
+  static std::vector<std::unique_ptr<QrSegment>> makeSegments(const char *text);
 
   /*
    * Returns a segment representing an Extended Channel Interpretation
    * (ECI) designator with the given assignment value.
    */
 public:
-  static QrSegment makeEci(long assignVal);
+  static std::unique_ptr<QrSegment> makeEci(long assignVal);
 
   /*---- Public static helper functions ----*/
 
@@ -227,7 +228,7 @@ public:
   // Otherwise returns -1 if a segment has too many characters to fit its length
   // field, or the total bits exceeds INT_MAX.
 public:
-  static int getTotalBits(const std::vector<QrSegment> &segs, int version);
+  static int getTotalBits(const std::vector<std::unique_ptr<QrSegment>> &segs, int version);
 
   /*---- Private constant ----*/
 
@@ -287,7 +288,7 @@ private:
    * be done without increasing the version.
    */
 public:
-  static QrCode encodeText(const char *text, Ecc ecl);
+  static std::unique_ptr<QrCode> encodeText(const char *text, Ecc ecl);
 
   /*
    * Returns a QR Code representing the given binary data at the given error
@@ -298,7 +299,7 @@ public:
    * be done without increasing the version.
    */
 public:
-  static QrCode encodeBinary(const std::vector<std::uint8_t> &data, Ecc ecl);
+  static std::unique_ptr<QrCode> encodeBinary(const std::vector<std::uint8_t> &data, Ecc ecl);
 
   /*---- Static factory functions (mid level) ----*/
 
@@ -315,10 +316,10 @@ public:
    * API; the high-level API is encodeText() and encodeBinary().
    */
 public:
-  static QrCode encodeSegments(const std::vector<QrSegment> &segs, Ecc ecl,
-                               int minVersion = 1, int maxVersion = 40,
-                               int mask = -1,
-                               bool boostEcl = true); // All optional parameters
+  static std::unique_ptr<QrCode> encodeSegments(const std::vector<std::unique_ptr<QrSegment>> &segs,
+                                                Ecc ecl, int minVersion = 1, int maxVersion = 40,
+                                                int mask = -1,
+                                                bool boostEcl = true); // All optional parameters
 
   /*---- Instance fields ----*/
 
@@ -366,8 +367,7 @@ private:
    * A mid-level API is the encodeSegments() function.
    */
 public:
-  QrCode(int ver, Ecc ecl, const std::vector<std::uint8_t> &dataCodewords,
-         int msk);
+  QrCode(int ver, Ecc ecl, const std::vector<std::uint8_t> &dataCodewords, int msk);
 
   /*---- Public instance methods ----*/
 
@@ -447,8 +447,7 @@ private:
   // error correction codewords appended to it, based on this object's version
   // and error correction level.
 private:
-  std::vector<std::uint8_t>
-  addEccAndInterleave(const std::vector<std::uint8_t> &data) const;
+  std::vector<std::uint8_t> addEccAndInterleave(const std::vector<std::uint8_t> &data) const;
 
   // Draws the given sequence of 8-bit codewords (data and error correction)
   // onto the entire data area of this QR Code. Function modules need to be
@@ -526,8 +525,7 @@ private:
   // Pushes the given value to the front and drops the last value. A helper
   // function for getPenaltyScore().
 private:
-  void finderPenaltyAddHistory(int currentRunLength,
-                               std::array<int, 7> &runHistory) const;
+  void finderPenaltyAddHistory(int currentRunLength, std::array<int, 7> &runHistory) const;
 
   // Returns true iff the i'th bit of x is set to 1.
 private:

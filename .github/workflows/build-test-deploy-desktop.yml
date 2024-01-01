@@ -1,0 +1,136 @@
+name: Build, Test and Deployment on Ubuntu
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-test-archive:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: 
+          - ubuntu-22.04
+          - ubuntu-20.04
+          - ubuntu-18.04
+        build_type: [Release]
+        c_compiler: [clang]
+        cpp_compiler: [clang++]
+    
+    outputs:
+      version: ${{ steps.app-version.outputs.version }}
+      isNewTag: ${{ steps.check-version.outputs.isNewTag }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set reusable strings
+        id: strings
+        shell: bash
+        run: |
+          echo "build-output-dir=${{ github.workspace }}${d}build" >> "$GITHUB_OUTPUT"
+        env:
+          d: ${{ runner.os == 'Windows' && '\' || '/' }}
+
+      - name: Configure CMake
+        run: >
+          mkdir -p build;
+          cmake -B ${{ steps.strings.outputs.build-output-dir }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -S ${{ github.workspace }}
+          > build/log.txt
+
+      - name: Report config results
+        if: ${{ failure() }}
+        shell: bash
+        run: |
+          file="build/log.txt"
+          if [ -f $file ]; then
+            cat $file
+          fi
+  
+      - name: Build
+        run: >
+          cmake --build ${{ steps.strings.outputs.build-output-dir }}
+          --config ${{ matrix.build_type }}
+          -j8
+
+      - name: Test
+        working-directory: build/test
+        shell: bash
+        run: ctest
+
+      - name: Extract app version
+        id: app-version
+        shell: bash
+        run: |
+          version=v`cat build/log.txt | grep ProjectVersion | cut -c 21-`
+          echo App Version: $version
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+  
+      - name: Check if it's a new release version
+        id: check-version
+        shell: bash
+        run: |
+          tag=`gh release list | grep -w $version || :`
+          if [[ -z "$tag" ]]; then
+            echo "isNewTag=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          version: ${{ steps.app-version.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+      - name: Gather and compress the artifacts
+        if: steps.check-version.outputs.isNewTag
+        shell: bash
+        run: |
+          rm -rf archive
+          dst=archive/files
+          mkdir -p $dst/lib
+          mkdir -p $dst/test
+          mv build/lib/$subdir$lib $dst/lib/$lib
+          mv lib/include $dst/lib
+          mv build/module/$subdir$module $dst/$module
+          mv build/test/Testing/Temporary/LastTest.log $dst/test
+          cd archive
+          tar -czf ${{ matrix.os }}.tgz -C files .
+        env:
+          subdir: ${{ runner.os == 'Windows' && 'Release/' || '' }}
+          lib: ${{ runner.os == 'Windows' && 'qrcode.lib' || 'libqrcode.a' }}
+          module: ${{ runner.os == 'Windows' && 'QrCode.exe' || 'QrCode' }}
+          test: ${{ runner.os == 'Windows' && 'QrCodeTest.exe' || 'QrCodeTest' }}
+
+      - name: Archive the artifacts
+        if: steps.check-version.outputs.isNewTag
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}
+          path: archive/${{ matrix.os }}.tgz
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-test-archive
+    if: needs.build-test-archive.outputs.isNewTag
+    env:
+      version: ${{ needs.build-test-archive.outputs.version }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download the artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: dist
+
+      - name: make release
+        run : >
+          gh release create $version
+          dist/**/*.tgz
+          --generate-notes
+          --title "Version $version"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

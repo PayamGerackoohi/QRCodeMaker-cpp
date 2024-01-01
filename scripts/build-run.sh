@@ -1,3 +1,3 @@
 set -e
-cmake --build build
-./build/module/QrCode
+./scripts/build.sh
+./scripts/run.sh

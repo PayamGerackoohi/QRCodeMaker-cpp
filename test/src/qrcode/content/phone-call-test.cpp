@@ -1,8 +1,10 @@
 #include "content/phone-call.hpp"
 #include "test-util/assertion.hpp"
 #include "test-util/test-platform.hpp"
+#include <cassert>
 #include <cstring>
 #include <iostream>
+#include <memory>
 #include <string>
 
 using QrCodeUtil::PhoneCall;

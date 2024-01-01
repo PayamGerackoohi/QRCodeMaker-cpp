@@ -13,7 +13,15 @@ Currently it can make:
 - Phone Call
 - SMS
 - V-Card
-- WIFI
+- Wifi
+
+## Run
+```sh
+./scripts/config.sh 
+./scripts/build.sh 
+./scripts/test.sh 
+./scripts/run.sh 
+```
 
 ## Sample
 ```c++
@@ -24,10 +32,10 @@ Currently it can make:
 using QrCodeUtil::MeCard;
 using QrCodeUtil::QrCode;
 using std::make_unique;
+using std::unique_ptr;
 using std::string;
-using QR = std::unique_ptr<QrCodeUtil::QrCode>;
 
-QR meCard() {
+unique_ptr<QrCode> meCard() {
   MeCard card;
   card.name = make_unique<MeCard::Name>("Payam", "Gerackoohi");
   card.phone = make_unique<string>("+98 905 738 0865");
@@ -39,7 +47,7 @@ QR meCard() {
   card.note = make_unique<string>("I am proficient in Tiger-Crane Style,\nand I am more than "
                                   "proficient in the exquisite art of the Samurai sword.");
   card.url = make_unique<string>("https://www.johndoe.com/");
-  return make_unique<QrCode>(QrCode::encodeText(card.str().c_str(), QrCode::Ecc::LOW));
+  return QrCode::encodeText(card.str().c_str(), QrCode::Ecc::LOW);
 }
 
 int main() {

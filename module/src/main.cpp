@@ -60,7 +60,7 @@ QR meCard() {
   card.note = make_unique<string>("I am proficient in Tiger-Crane Style,\nand I am more than "
                                   "proficient in the exquisite art of the Samurai sword.");
   card.url = make_unique<string>("https://www.johndoe.com/");
-  return make_unique<QrCode>(QrCode::encodeText(card.str().c_str(), QrCode::Ecc::LOW));
+  return QrCode::encodeText(card.str().c_str(), QrCode::Ecc::LOW);
 }
 
 QR vcard() {
@@ -107,17 +107,17 @@ QR vcard() {
   card.uid = make_unique<string>("urn:uuid:da418720-3754-4631-a169-db89a02b831b");
   card.url = make_unique<string>("http://www.johndoe.com");
   card.xml = make_unique<string>("XML:<b>Not an xCard XML element</b>");
-  return make_unique<QrCode>(QrCode::encodeText(card.str().c_str(), QrCode::Ecc::LOW));
+  return QrCode::encodeText(card.str().c_str(), QrCode::Ecc::LOW);
 }
 
 QR call() {
   PhoneCall phoneCall("+98 905 738 0865");
-  return make_unique<QrCode>(QrCode::encodeText(phoneCall.str().c_str(), QrCode::Ecc::LOW));
+  return QrCode::encodeText(phoneCall.str().c_str(), QrCode::Ecc::LOW);
 }
 
 QR website() {
   auto url = "https://github.com/zxing/zxing/wiki/Barcode-Contents";
-  return make_unique<QrCode>(QrCode::encodeText(url, QrCode::Ecc::LOW));
+  return QrCode::encodeText(url, QrCode::Ecc::LOW);
 }
 
 QR email() {
@@ -126,5 +126,5 @@ QR email() {
   email.bcc = {"lastperson@theirsite.com"};
   email.subject = make_unique<string>("Big News");
   email.body = make_unique<string>("Body goes here.");
-  return make_unique<QrCode>(QrCode::encodeText(email.str().c_str(), QrCode::Ecc::LOW));
+  return QrCode::encodeText(email.str().c_str(), QrCode::Ecc::LOW);
 }
